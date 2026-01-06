@@ -23,7 +23,7 @@ namespace MockConsola.Servicios
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             await _httpClient.PostAsync(
-                "https://localhost:5001/api/registros", //aca va la url del endpoint para recibir los datos,      CAMBIAR antes de usar
+                "http://localhost:5083/MedicionSensores", //aca va la url del endpoint para recibir los datos,      CAMBIAR luego a la url de azure
                 content
             );
         }

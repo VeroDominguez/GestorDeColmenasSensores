@@ -3,7 +3,7 @@ using MockClasses.Datos;
 using MockClasses.DTOs;
 using MockConsola.Servicios;
 
-int intervaloSegundos = 5;
+int intervaloSegundos = 300;
 
 // Inicialización de sensores internos (placas internas)
 var sensoresInternos = new List<SensorInterno>
@@ -11,17 +11,17 @@ var sensoresInternos = new List<SensorInterno>
     new SensorInterno
     {
         Id = 1,
-        TipoSensor = "Interno-Cuadro"
+        TipoSensor = "TempColmena"
     },
     new SensorInterno
     {
         Id = 2,
-        TipoSensor = "Interno-Cuadro"
+        TipoSensor = "PesoColmena"
     },
     new SensorInterno
     {
         Id = 3,
-        TipoSensor = "Interno-Cuadro"
+        TipoSensor = "TempColmena"
     }
 };
 
@@ -71,6 +71,8 @@ while (true)
     // Armar DTO (se envía una placa interna + externo)--- esto hay que modificarlo dado que ahora hay 3 placas internas + 1 externa
     var registro = new DataArduinoDto
     {
+        idSensor = sensoresInternos[0].Id,
+        TipoSensor = sensoresInternos[0].TipoSensor,
         TempInterna1 = sensoresInternos[0].TempInterna1,
         TempInterna2 = sensoresInternos[0].TempInterna2,
         TempInterna3 = sensoresInternos[0].TempInterna3,

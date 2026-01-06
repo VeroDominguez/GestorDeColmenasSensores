@@ -24,5 +24,22 @@ namespace MockClasses.Datos
             (20.2f, 43.0f),
             (21.0f, 43.8f)
         };
+
+        public static List<(int idSensor, string tipoSensor)> SensoresInterno = new()
+        {
+            (1, "TempColmena"),
+            (2, "PesoColmena"),
+            (3, "TempColmena"),
+            (4, "TempColmena"),
+            (5, "TempColmena")
+        };
+
+        public static List<(int idSensor, string tipoSensor)> SensoresExterno = new()
+        {
+            (6, "TempCuadro"),
+            (7, "TempCuadro"),
+            (8, "TempCuadro"),
+            (9, "TempCuadro")
+        };
     }
 }

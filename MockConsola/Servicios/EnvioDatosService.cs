@@ -18,7 +18,7 @@ namespace MockConsola.Servicios
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             using var response = await _httpClient.PostAsync(
-                "http://localhost:5083/MedicionSensores",
+                "https://gestordeapiarios-b7dhf6e4amdfh3e0.centralus-01.azurewebsites.net/MedicionSensores",
                 content
             );
 

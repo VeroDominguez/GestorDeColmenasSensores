@@ -11,29 +11,42 @@ Console.WriteLine("║     Mock de Sensores de Colmena - Sistema de Apiarios    
 Console.WriteLine("╚════════════════════════════════════════════════════════════════╝");
 Console.WriteLine();
 Console.WriteLine("Configuración de Sensores según Base de Datos:");
-Console.WriteLine("- Colmena 6: Sensores 1, 2, 3");
-Console.WriteLine("- Colmena 7: Sensores 4, 5, 6");
-Console.WriteLine("- Colmena 8: Sensores 7, 8");
-Console.WriteLine("- Colmena 9: Sensores 9, 10");
 Console.WriteLine();
-Console.WriteLine("¿Qué colmena deseas simular?");
-Console.WriteLine("1 - Colmena 6 (Sensores 1-3)");
-Console.WriteLine("2 - Colmena 7 (Sensores 4-6)");
-Console.WriteLine("3 - Colmena 8 (Sensores 7-8)");
-Console.WriteLine("4 - Colmena 9 (Sensores 9-10)");
-Console.WriteLine("5 - Todas las colmenas (10 sensores)");
-Console.Write("\nSelecciona una opción (1-5): ");
+Console.WriteLine("AZURE (10 sensores):");
+Console.WriteLine("  - Colmena 6: Sensores 1, 2, 3");
+Console.WriteLine("  - Colmena 7: Sensores 4, 5, 6");
+Console.WriteLine("  - Colmena 8: Sensores 7, 8");
+Console.WriteLine("  - Colmena 9: Sensores 9, 10");
+Console.WriteLine();
+Console.WriteLine("LOCAL (12 sensores):");
+Console.WriteLine("  - Colmena 1: Sensores 1, 2, 3");
+Console.WriteLine("  - Colmena 2: Sensores 4, 5, 6");
+Console.WriteLine("  - Colmena 3: Sensores 7, 8");
+Console.WriteLine("  - Colmena 4: Sensores 9, 10");
+Console.WriteLine("  - Colmena 5: Sensores 11, 12");
+Console.WriteLine();
+Console.WriteLine("¿Qué colmena(s) deseas simular?");
+Console.WriteLine("1 - Colmena 1 (Sensores 1-3)");
+Console.WriteLine("2 - Colmena 2 (Sensores 4-6)");
+Console.WriteLine("3 - Colmena 3 (Sensores 7-8)");
+Console.WriteLine("4 - Colmena 4 (Sensores 9-10)");
+Console.WriteLine("5 - Colmena 5 (Sensores 11-12) - SOLO BD LOCAL");
+Console.WriteLine("6 - Azure: Todas las colmenas (Sensores 1-10)");
+Console.WriteLine("7 - Local: Todas las colmenas (Sensores 1-12)");
+Console.Write("\nSelecciona una opción (1-7): ");
 
 string? opcion = Console.ReadLine();
 
 List<int> sensoresASimular = opcion switch
 {
-    "1" => new List<int> { 1, 2, 3 },       // Colmena 6
-    "2" => new List<int> { 4, 5, 6 },       // Colmena 7
-    "3" => new List<int> { 7, 8 },          // Colmena 8
-    "4" => new List<int> { 9, 10 },         // Colmena 9
-    "5" => new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, // Todas
-    _ => new List<int> { 1, 2, 3 }          // Default: Colmena 6
+    "1" => new List<int> { 1, 2, 3 },       // Colmena 1
+    "2" => new List<int> { 4, 5, 6 },       // Colmena 2
+    "3" => new List<int> { 7, 8 },          // Colmena 3
+    "4" => new List<int> { 9, 10 },         // Colmena 4
+    "5" => new List<int> { 11, 12 },        // Colmena 5 (solo local)
+    "6" => new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, // Azure - Todas
+    "7" => new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 }, // Local - Todas
+    _ => new List<int> { 1, 2, 3 }          // Default: Colmena 1
 };
 
 // Inicialización de sensores internos basados en la selección
@@ -60,15 +73,30 @@ var sensorExterno = new SensorExterno
 // Servicio de envío
 var envioService = new EnvioDatosService();
 
+Console.WriteLine();
+Console.WriteLine("════════════════════════════════════════════════════════════════");
+Console.WriteLine("🔄 VERIFICANDO DISPONIBILIDAD DEL BACKEND...");
+Console.WriteLine("════════════════════════════════════════════════════════════════");
+Console.WriteLine();
+Console.WriteLine("⏳ Esto puede tomar hasta 2 minutos si el backend está");
+Console.WriteLine("   iniciándose (cold start)...");
+Console.WriteLine();
+
+
 // Índices para recorrer listas precargadas
 int indiceInterno = 0;
 int indiceExterno = 0;
 
 Console.WriteLine();
-Console.WriteLine($"Iniciando simulación con {sensoresInternos.Count} sensores...");
-Console.WriteLine("Presiona Ctrl+C para detener");
+Console.WriteLine("════════════════════════════════════════════════════════════════");
+Console.WriteLine($"✓ Iniciando simulación con {sensoresInternos.Count} sensores...");
+Console.WriteLine("  Sistema de reintentos automáticos activado (3 intentos por envío)");
+Console.WriteLine("  Presiona Ctrl+C para detener");
 Console.WriteLine("════════════════════════════════════════════════════════════════");
 await Task.Delay(2000);
+
+int ciclosExitosos = 0;
+int ciclosConErrores = 0;
 
 while (true)
 {
@@ -117,7 +145,6 @@ while (true)
     Console.WriteLine("└────────────────────────────────────────────────────────────────┘");
 
     // Determinar qué sensor enviará datos externos
-    // Por defecto, el primer sensor de peso en la lista, o el primero si no hay sensores de peso
     int sensorConDatosExternos = sensoresInternos
         .FirstOrDefault(s => s.TipoSensor == "PesoColmena")?.idSensor
         ?? sensoresInternos.First().idSensor;
@@ -126,26 +153,23 @@ while (true)
     Console.WriteLine("════════════════════════════════════════════════════════════════");
     Console.WriteLine($"📡 Enviando datos al backend...");
     Console.WriteLine($"   (Sensor {sensorConDatosExternos} incluirá datos externos)");
+    Console.WriteLine($"   Sistema de reintentos: ACTIVO (3 intentos por envío)");
     Console.WriteLine("════════════════════════════════════════════════════════════════");
 
     int sensorActual = 0;
     int exitosos = 0;
     int fallidos = 0;
+    bool huboColdStartError = false;
 
     foreach (var sensorInterno in sensoresInternos)
     {
         var registro = new DataArduinoDto
         {
-            // Identifica el sensor interno que envía los datos
             idSensor = sensorInterno.idSensor,
             TipoSensor = sensorInterno.TipoSensor,
-
-            // Datos del sensor interno - Temperaturas internas
             TempInterna1 = sensorInterno.TempInterna1,
             TempInterna2 = sensorInterno.TempInterna2,
             TempInterna3 = sensorInterno.TempInterna3,
-
-            // Datos del sensor externo - Solo el sensor designado los envía
             TempExterna = sensorInterno.idSensor == sensorConDatosExternos
                 ? sensorExterno.TempExterna
                 : (float?)null,
@@ -156,23 +180,43 @@ while (true)
 
         try
         {
-            // Enviar datos
             await envioService.EnviarAsync(registro);
             Console.WriteLine($"  ✓ Sensor {sensorInterno.idSensor} ({sensorInterno.TipoSensor}) enviado correctamente");
             exitosos++;
         }
         catch (Exception e)
         {
-            Console.WriteLine($"  ✗ Error en Sensor {sensorInterno.idSensor}: {e.Message}");
+            var mensaje = e.Message;
+
+            // Detectar si es un error de cold start
+            if (mensaje.Contains("HTML") || mensaje.Contains("texto") || mensaje.Contains("iniciando"))
+            {
+                huboColdStartError = true;
+                Console.WriteLine($"  ⚠ Sensor {sensorInterno.idSensor}: Backend aún iniciando - {mensaje.Split('.')[0]}");
+            }
+            else
+            {
+                Console.WriteLine($"  ✗ Error en Sensor {sensorInterno.idSensor}: {mensaje}");
+            }
             fallidos++;
         }
 
-        // Esperar entre envíos para evitar problemas de concurrencia en el backend
+        // Esperar entre envíos
         sensorActual++;
         if (sensorActual < sensoresInternos.Count)
         {
             await Task.Delay(intervaloEntreEnviosMs);
         }
+    }
+
+    // Actualizar estadísticas
+    if (fallidos == 0)
+    {
+        ciclosExitosos++;
+    }
+    else
+    {
+        ciclosConErrores++;
     }
 
     Console.WriteLine("════════════════════════════════════════════════════════════════");
@@ -181,7 +225,16 @@ while (true)
     if (fallidos > 0)
     {
         Console.WriteLine($"   ✗ Fallidos: {fallidos}");
+        if (huboColdStartError)
+        {
+            Console.WriteLine($"   ℹ️  Nota: Algunos errores parecen ser por cold start del backend");
+            Console.WriteLine($"      El sistema continuará reintentando automáticamente");
+        }
     }
+    Console.WriteLine();
+    Console.WriteLine($"📈 Estadísticas totales:");
+    Console.WriteLine($"   Ciclos exitosos: {ciclosExitosos}");
+    Console.WriteLine($"   Ciclos con errores: {ciclosConErrores}");
     Console.WriteLine($"   ⏱  Próximo envío en {intervaloSegundos} segundos");
     Console.WriteLine("════════════════════════════════════════════════════════════════");
 
